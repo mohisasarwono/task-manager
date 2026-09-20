@@ -1,5 +1,7 @@
 package com.example.taskmanager.entity;
 
+import com.example.taskmanager.static_enum.Priority;
+import com.example.taskmanager.static_enum.Status;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,13 +35,15 @@ public class Task {
     private String description;
 
     @NotBlank
-    private String status;
+    @NotNull
+    private Status status;
 
     @NotNull
     private LocalDateTime dueDate;
 
     @NotBlank
-    private String priority;
+    @NotNull
+    private Priority priority;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
