@@ -3,6 +3,8 @@ package com.example.taskmanager.entity;
 import com.example.taskmanager.static_enum.Priority;
 import com.example.taskmanager.static_enum.Status;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,15 +36,15 @@ public class Task {
 
     private String description;
 
-    @NotBlank
     @NotNull
+    @Enumerated(EnumType.STRING)
     private Status status;
 
     @NotNull
     private LocalDateTime dueDate;
 
-    @NotBlank
     @NotNull
+    @Enumerated(EnumType.STRING)
     private Priority priority;
 
     @ManyToOne

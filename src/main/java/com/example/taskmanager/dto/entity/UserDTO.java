@@ -6,7 +6,7 @@ import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
-@JsonIgnoreProperties({"email","password"})
+@JsonIgnoreProperties({"password"})
 public class UserDTO {
     private Long id;
     private String email;

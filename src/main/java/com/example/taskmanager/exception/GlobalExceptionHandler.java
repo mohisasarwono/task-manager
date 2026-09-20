@@ -7,6 +7,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,16 +28,29 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleBadCredentialsException(BadCredentialsException ex) {
-        Map<String, String> error = new HashMap<>();
-        error.put("message", ex.getMessage());
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                createMapAndPutMsg(ex.getMessage())
+        );
     }
 
     @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<Map<String, String>> handleExpiredJwtException(ExpiredJwtException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                createMapAndPutMsg("Token has expired, please login again or refresh your token")
+        );
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> handleResponseStatusException(ResponseStatusException ex){
+        return ResponseEntity.status(ex.getStatusCode()).body(
+                createMapAndPutMsg(ex.getReason())
+        );
+    }
+
+
+    private Map<String, String> createMapAndPutMsg(String message){
         Map<String, String> error = new HashMap<>();
-        error.put("message", "Token has expired, please login again or refresh your token");
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        error.put("message",message);
+        return error;
     }
 }
