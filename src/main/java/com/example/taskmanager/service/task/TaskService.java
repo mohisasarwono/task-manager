@@ -27,18 +27,15 @@ public class TaskService {
     public GenericResponse<List<TaskDTO>> listOfTasks() {
         List<TaskDTO> listOfTask = taskRepository.findAllByUser(SecurityUtils.getCurrentUser())
                 .orElseThrow(
-                        () -> new ResponseStatusException(
-                                HttpStatus.INTERNAL_SERVER_ERROR,"Something went wrong"
-                        )
+                        () -> throwResponseStatExp(HttpStatus.INTERNAL_SERVER_ERROR,"Something went wrong")
                 ).stream().map(this::mapToTaskDTO).toList();
         return new GenericResponse<>(listOfTask);
     }
 
     public GenericResponse<List<TaskDTO>> listOfTasksByStatus(String status){
         List<TaskDTO> listOfTask = taskRepository.findAllByUserAndStatus(SecurityUtils.getCurrentUser(), Status.fromValue(status))
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.INTERNAL_SERVER_ERROR,"Something went wrong"
-                        )
+                .orElseThrow(
+                        () -> throwResponseStatExp(HttpStatus.INTERNAL_SERVER_ERROR,"Something went wrong")
                 ).stream().map(this::mapToTaskDTO).toList();
         return new GenericResponse<>(listOfTask);
     }
@@ -74,12 +71,15 @@ public class TaskService {
 
     private Task getTaskByIdAndCurrUser(Long id){
         return taskRepository.findByIdAndUser(id, SecurityUtils.getCurrentUser())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Cannot find task with id: "+id));
+                .orElseThrow(() -> throwResponseStatExp(HttpStatus.NOT_FOUND, "Cannot find task with id: "+id));
     }
 
     private TaskDTO mapToTaskDTO(Task task){
         return modelMapper.map(task, TaskDTO.class);
+    }
+
+    private ResponseStatusException throwResponseStatExp(HttpStatus httpStatus, String msg){
+        return new ResponseStatusException(httpStatus,msg);
     }
 
 }

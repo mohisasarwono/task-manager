@@ -11,7 +11,7 @@ public record MyUserDetails(User user) implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(); // atau role-based authorities
+        return List.of();
     }
 
     @Override

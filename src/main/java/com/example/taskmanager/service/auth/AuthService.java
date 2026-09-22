@@ -19,6 +19,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -47,7 +49,7 @@ public class AuthService {
 
         Authentication authentication = authenticationManager.authenticate(token);
         MyUserDetails myUserDetails = (MyUserDetails) authentication.getPrincipal();
-        User user = myUserDetails.user();
+        User user = Objects.requireNonNull(myUserDetails).user();
         return new GenericResponse<>(
                 new LoginResponse()
                         .setId(user.getId())
