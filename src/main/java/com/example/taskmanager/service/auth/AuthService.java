@@ -46,10 +46,16 @@ public class AuthService {
     public GenericResponse<LoginResponse> login(LoginRequest loginReq){
         UsernamePasswordAuthenticationToken token =
                 new UsernamePasswordAuthenticationToken(loginReq.getEmail(), loginReq.getPassword());
+        User user = null;
 
-        Authentication authentication = authenticationManager.authenticate(token);
-        MyUserDetails myUserDetails = (MyUserDetails) authentication.getPrincipal();
-        User user = Objects.requireNonNull(myUserDetails).user();
+        try{
+            Authentication authentication = authenticationManager.authenticate(token);
+            MyUserDetails myUserDetails = (MyUserDetails) authentication.getPrincipal();
+            user = Objects.requireNonNull(myUserDetails).user();
+        }catch (BadCredentialsException e){
+            throw new BadCredentialsException("Invalid Email or Password");
+        }
+
         return new GenericResponse<>(
                 new LoginResponse()
                         .setId(user.getId())
@@ -60,7 +66,7 @@ public class AuthService {
 
     public GenericResponse<LoginResponse> refreshToken(String refreshToken) {
         Long userId = jwtService.getUserIdFromRefreshToken(refreshToken);
-        User user = userRepository.findById(userId).orElseThrow(() -> new BadCredentialsException("Invalid token"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new BadCredentialsException("Invalid Refresh Token"));
         String accessToken = jwtService.generateAccessToken(user);
         return new GenericResponse<>(
                 new LoginResponse()

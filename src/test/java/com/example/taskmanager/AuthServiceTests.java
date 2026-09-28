@@ -10,6 +10,7 @@ import com.example.taskmanager.repository.UserRepository;
 import com.example.taskmanager.security.JwtService;
 import com.example.taskmanager.security.MyUserDetails;
 import com.example.taskmanager.service.auth.AuthService;
+import com.mysql.cj.log.Log;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -151,5 +152,67 @@ public class AuthServiceTests {
 
         verify(authenticationManager, times(1))
                 .authenticate(any(UsernamePasswordAuthenticationToken.class));
+    }
+
+    @Test
+    void login_shouldThrowBadCredentialException_whenInvalidEmailOrPassword(){
+        LoginRequest loginRequest = new LoginRequest()
+                .setEmail("test@test.com")
+                .setPassword("invalidPassword");
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new BadCredentialsException("Bad credentials"));
+
+        BadCredentialsException exception = assertThrows(
+                BadCredentialsException.class,
+                () -> authService.login(loginRequest)
+        );
+
+        assertEquals("Invalid Email or Password", exception.getMessage());
+        verify(authenticationManager, times(1))
+                .authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(jwtService, never()).generateAccessToken(any(User.class));
+        verify(jwtService, never()).generateRefreshToken(any(User.class));
+    }
+
+    @Test
+    void refreshToken_shouldReturnLoginResponse_whenRequestIsValid(){
+        String refreshToken = "refresh-token";
+
+        when(jwtService.getUserIdFromRefreshToken(refreshToken))
+                .thenReturn(1L);
+
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(dummyUser));
+
+        when(jwtService.generateAccessToken(dummyUser))
+                .thenReturn("new-access-token");
+
+        GenericResponse<LoginResponse> result = authService.refreshToken(refreshToken);
+        assertNotNull(result);
+        assertEquals(1L, result.getData().getId());
+        assertEquals("new-access-token", result.getData().getToken());
+        assertEquals("refresh-token", result.getData().getRefreshToken());
+        verify(jwtService, never()).generateRefreshToken(any(User.class));
+    }
+
+    @Test
+    void refreshToken_shouldThrowBadCredentialException_whenRefreshTokenInvalid(){
+        String refreshToken = "invalid-refresh-token";
+
+        when(jwtService.getUserIdFromRefreshToken(refreshToken))
+                .thenReturn(0L);
+
+        when(userRepository.findById(0L))
+                .thenReturn(Optional.empty());
+
+        BadCredentialsException exception = assertThrows(
+                BadCredentialsException.class,
+                () -> authService.refreshToken(refreshToken)
+        );
+
+        assertEquals("Invalid Refresh Token", exception.getMessage());
+        verify(jwtService, never()).generateAccessToken(any(User.class));
+        verify(jwtService, never()).generateRefreshToken(any(User.class));
     }
 }
